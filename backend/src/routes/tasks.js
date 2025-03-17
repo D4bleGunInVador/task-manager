@@ -11,6 +11,7 @@ const upload = multer({ dest: "uploads/" }); // Директорія для зб
 router.get("/", authenticateToken, (req, res) => {
     db.all("SELECT * FROM tasks WHERE user_id = ?", [req.user.id], (err, rows) => {
         if (err) {
+            console.error("❌ DB Error (GET /tasks):", err.message);
             return res.status(500).json({ error: err.message });
         }
         res.json(rows);
@@ -24,40 +25,60 @@ router.post("/", authenticateToken, (req, res) => {
         return res.status(400).json({ error: "Title is required" });
     }
 
-    db.run("INSERT INTO tasks (title, due_date, user_id) VALUES (?, ?, ?)", [title, due_date, req.user.id], function (err) {
-        if (err) {
-            return res.status(500).json({ error: err.message });
+    db.run(
+        "INSERT INTO tasks (title, due_date, user_id) VALUES (?, ?, ?)",
+        [title, due_date || null, req.user.id],
+        function (err) {
+            if (err) {
+                console.error("❌ DB Error (POST /tasks):", err.message);
+                return res.status(500).json({ error: err.message });
+            }
+            res.status(201).json({
+                id: this.lastID,
+                title,
+                due_date: due_date || null,
+                completed: false,
+                user_id: req.user.id,
+                image_path: null,
+            });
         }
-        res.status(201).json({ id: this.lastID, title, due_date, completed: false, user_id: req.user.id });
-    });
+    );
 });
 
 // 📌 Оновити задачу (назва, статус, дедлайн)
-router.put("/:id", (req, res) => {
+router.put("/:id", authenticateToken, (req, res) => {
     const { id } = req.params;
-    const { completed } = req.body;
+    const { title, completed, due_date } = req.body;
 
-    db.get("SELECT * FROM tasks WHERE id = ?", [id], (err, task) => {
+    db.get("SELECT * FROM tasks WHERE id = ? AND user_id = ?", [id, req.user.id], (err, task) => {
         if (err) {
-            return res.status(500).json({ error: "Database error: " + err.message });
+            console.error("❌ DB Error (PUT /tasks):", err.message);
+            return res.status(500).json({ error: err.message });
         }
         if (!task) {
-            return res.status(404).json({ error: "Task not found" });
+            return res.status(404).json({ error: "Task not found or access denied" });
         }
 
-        db.run("UPDATE tasks SET completed = ? WHERE id = ?", [completed, id], function (err) {
-            if (err) {
-                return res.status(500).json({ error: err.message });
+        db.run(
+            "UPDATE tasks SET title = ?, completed = ?, due_date = ? WHERE id = ?",
+            [title || task.title, completed ?? task.completed, due_date || task.due_date, id],
+            function (err) {
+                if (err) {
+                    console.error("❌ DB Error (UPDATE /tasks):", err.message);
+                    return res.status(500).json({ error: err.message });
+                }
+                res.json({ message: "Task updated", id, title, completed, due_date });
             }
-            res.json({ message: "Task updated" });
-        });
+        );
     });
 });
-
 
 // 📎 Додати фото до задачі
 router.post("/upload/:id", authenticateToken, upload.single("image"), (req, res) => {
     const { id } = req.params;
+    if (!req.file) {
+        return res.status(400).json({ error: "No image uploaded" });
+    }
     const imagePath = req.file.path;
 
     db.run(
@@ -65,6 +86,7 @@ router.post("/upload/:id", authenticateToken, upload.single("image"), (req, res)
         [imagePath, id, req.user.id],
         function (err) {
             if (err) {
+                console.error("❌ DB Error (UPLOAD /tasks):", err.message);
                 return res.status(500).json({ error: err.message });
             }
             res.json({ message: "Image uploaded successfully", image_path: imagePath });
@@ -78,12 +100,13 @@ router.delete("/:id", authenticateToken, (req, res) => {
 
     db.run("DELETE FROM tasks WHERE id = ? AND user_id = ?", [id, req.user.id], function (err) {
         if (err) {
+            console.error("❌ DB Error (DELETE /tasks):", err.message);
             return res.status(500).json({ error: err.message });
         }
         if (this.changes === 0) {
             return res.status(403).json({ error: "You can only delete your own tasks." });
         }
-        res.json({ message: "Task deleted" });
+        res.json({ message: "Task deleted successfully" });
     });
 });
 
