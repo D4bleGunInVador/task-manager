@@ -35,7 +35,7 @@ jobs:
 
       - name: Wait for server to be ready
         run: |
-          for i in {1..10}; do
+          for i in {1..15}; do
             if curl --output /dev/null --silent --head --fail http://localhost:5000/health; then
               echo "Server is up!"
               exit 0
@@ -47,6 +47,16 @@ jobs:
 
       - name: Install Newman
         run: npm install -g newman
+
+      - name: Get Auth Token
+        run: |
+          TOKEN=$(curl -X POST "http://localhost:5000/auth/login" -H "Content-Type: application/json" -d '{"email": "taskuser@example.com", "password": "testpassword"}' | jq -r '.token')
+          echo "TOKEN=$TOKEN" >> $GITHUB_ENV
+
+      - name: Update Postman Environment
+        run: |
+          jq --arg token "$TOKEN" '.values |= map(if .key == "token" then .value = $token else . end)' postman_environment.json > postman_environment_tmp.json
+          mv postman_environment_tmp.json postman_environment.json
 
       - name: Run API tests
         run: |
