@@ -44,5 +44,8 @@ const taskRoutes = require("./routes/tasks");
 
 app.use("/auth", authRoutes);
 app.use("/tasks", taskRoutes);
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok" });
+});
 
 module.exports = app;
