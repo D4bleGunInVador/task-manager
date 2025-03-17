@@ -45,23 +45,28 @@ jobs:
           done
           echo "Server did not start in time." && exit 1
 
-      - name: Install Newman
-        run: npm install -g newman jq
-
-      - name: Get Auth Token
+      - name: Get Auth Token (Without jq)
         run: |
-          TOKEN=$(curl -X POST "http://localhost:5000/auth/login" -H "Content-Type: application/json" -d '{"email": "taskuser@example.com", "password": "testpassword"}' | jq -r '.token')
-          if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
+          RESPONSE=$(curl -s -X POST "http://localhost:5000/auth/login" \
+            -H "Content-Type: application/json" \
+            -d '{"email": "taskuser@example.com", "password": "testpassword"}')
+          TOKEN=$(echo "$RESPONSE" | grep -o '"token":"[^"]*' | cut -d '"' -f 4)
+          
+          if [ -z "$TOKEN" ]; then
             echo "Failed to get token!"
+            echo "Response from server: $RESPONSE"
             exit 1
           fi
+
           echo "TOKEN=$TOKEN" >> $GITHUB_ENV
-          echo "Token successfully received."
+          echo "Token successfully received: $TOKEN"
 
       - name: Update Postman Environment
         run: |
-          jq --arg token "$TOKEN" '.values |= map(if .key == "token" then .value = $token else . end)' postman_environment.json > postman_environment_tmp.json
-          mv postman_environment_tmp.json postman_environment.json
+          sed -i "s/\"token\": \"[^\"]*\"/\"token\": \"$TOKEN\"/g" postman_environment.json
+
+      - name: Install Newman
+        run: npm install -g newman
 
       - name: Run API tests
         run: |
