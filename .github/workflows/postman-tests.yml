@@ -49,7 +49,7 @@ jobs:
         run: |
           RESPONSE=$(curl -s -X POST "http://localhost:5000/auth/login" \
             -H "Content-Type: application/json" \
-            -d '{"email": "taskuser@example.com", "password": "testpassword"}')
+            -d '{"email": "test@exmp.com", "password": "1"}')
           TOKEN=$(echo "$RESPONSE" | grep -o '"token":"[^"]*' | cut -d '"' -f 4)
           
           if [ -z "$TOKEN" ]; then
