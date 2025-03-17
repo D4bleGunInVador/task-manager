@@ -15,3 +15,9 @@ afterAll((done) => {
         done();
     });
 });
+afterAll((done) => {
+    server.close(() => {
+        console.log("Server closed after tests.");
+        done();
+    });
+});
