@@ -50,7 +50,6 @@ jobs:
           curl -s -X POST "http://localhost:5000/auth/register" \
             -H "Content-Type: application/json" \
             -d '{"email": "test@exmp.com", "password": "1"}' || true
-
       - name: Get Auth Token
         run: |
           RESPONSE=$(curl -s -X POST "http://localhost:5000/auth/login" \
@@ -59,13 +58,14 @@ jobs:
           TOKEN=$(echo "$RESPONSE" | jq -r '.token')
 
           if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
-            echo "Failed to get token!"
+            echo "❌ Failed to get token!"
             echo "Response from server: $RESPONSE"
             exit 1
           fi
 
           echo "TOKEN=$TOKEN" >> $GITHUB_ENV
-          echo "Token successfully received: $TOKEN"
+          echo "✅ Token successfully received: $TOKEN"
+
 
       - name: Update Postman Environment
         run: |
