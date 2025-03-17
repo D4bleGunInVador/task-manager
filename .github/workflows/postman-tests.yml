@@ -51,7 +51,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"email": "test@exmp.com", "password": "1"}' || true
       - name: Get Auth Token (Without jq)
-      
+
         run: |
           RESPONSE=$(curl -s -X POST "http://localhost:5000/auth/login" \
             -H "Content-Type: application/json" \
@@ -76,4 +76,5 @@ jobs:
 
       - name: Run API tests
         run: |
-          newman run postman-tests.json -e postman_environment.json
+          newman run postman-tests.json -e postman_environment.json \
+            --env-var "TOKEN=$TOKEN"
