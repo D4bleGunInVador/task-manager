@@ -33,24 +33,27 @@ router.post("/", authenticateToken, (req, res) => {
 });
 
 // 📌 Оновити задачу (назва, статус, дедлайн)
-router.put("/:id", authenticateToken, (req, res) => {
+router.put("/:id", (req, res) => {
     const { id } = req.params;
-    const { title, completed, due_date } = req.body;
+    const { completed } = req.body;
 
-    db.run(
-        "UPDATE tasks SET title = ?, completed = ?, due_date = ? WHERE id = ? AND user_id = ?",
-        [title, completed, due_date, id, req.user.id],
-        function (err) {
+    db.get("SELECT * FROM tasks WHERE id = ?", [id], (err, task) => {
+        if (err) {
+            return res.status(500).json({ error: "Database error: " + err.message });
+        }
+        if (!task) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        db.run("UPDATE tasks SET completed = ? WHERE id = ?", [completed, id], function (err) {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
-            if (this.changes === 0) {
-                return res.status(403).json({ error: "You can only update your own tasks." });
-            }
             res.json({ message: "Task updated" });
-        }
-    );
+        });
+    });
 });
+
 
 // 📎 Додати фото до задачі
 router.post("/upload/:id", authenticateToken, upload.single("image"), (req, res) => {
