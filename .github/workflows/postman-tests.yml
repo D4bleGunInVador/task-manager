@@ -50,15 +50,15 @@ jobs:
           curl -s -X POST "http://localhost:5000/auth/register" \
             -H "Content-Type: application/json" \
             -d '{"email": "test@exmp.com", "password": "1"}' || true
-      - name: Get Auth Token (Without jq)
 
+      - name: Get Auth Token
         run: |
           RESPONSE=$(curl -s -X POST "http://localhost:5000/auth/login" \
             -H "Content-Type: application/json" \
             -d '{"email": "test@exmp.com", "password": "1"}')
-          TOKEN=$(echo "$RESPONSE" | grep -o '"token":"[^"]*' | cut -d '"' -f 4)
-          
-          if [ -z "$TOKEN" ]; then
+          TOKEN=$(echo "$RESPONSE" | jq -r '.token')
+
+          if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
             echo "Failed to get token!"
             echo "Response from server: $RESPONSE"
             exit 1
@@ -69,7 +69,8 @@ jobs:
 
       - name: Update Postman Environment
         run: |
-          sed -i "s/\"token\": \"[^\"]*\"/\"token\": \"$TOKEN\"/g" postman_environment.json
+          jq --arg token "$TOKEN" '.values |= map(if .key == "TOKEN" then .value = $token else . end)' postman_environment.json > postman_environment_tmp.json
+          mv postman_environment_tmp.json postman_environment.json
 
       - name: Install Newman
         run: npm install -g newman
