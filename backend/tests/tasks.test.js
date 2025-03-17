@@ -67,5 +67,56 @@ describe("Tasks API", () => {
         } else {
             console.warn("⚠️ Task not found, skipping assertion.");
         }
+        it("should create a new task", async () => {
+    const res = await request(app)
+        .post("/tasks")
+        .send({ title: "Test Task" });
+
+    expect(res.statusCode).toEqual(201);
+    expect(res.body).toHaveProperty("id");
+
+    if (res.body.id) {
+        taskId = res.body.id; // Зберігаємо taskId, якщо він є
+    } else {
+        console.warn("⚠️ Task was not created, skipping further tests.");
+    }
+});
+
+it("should update a task", async () => {
+    if (!taskId) return console.warn("⚠️ No taskId, skipping test.");
+
+    const res = await request(app)
+        .put(`/tasks/${taskId}`)
+        .send({ completed: true });
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.message).toBe("Task updated");
+});
+
+it("should create a new task", async () => {
+    const res = await request(app)
+        .post("/tasks")
+        .send({ title: "Test Task" });
+
+    expect(res.statusCode).toEqual(201);
+    expect(res.body).toHaveProperty("id");
+
+    if (res.body.id) {
+        taskId = res.body.id; // Зберігаємо taskId, якщо він є
+    } else {
+        console.warn("⚠️ Task was not created, skipping further tests.");
+    }
+});
+
+it("should update a task", async () => {
+    if (!taskId) return console.warn("⚠️ No taskId, skipping test.");
+
+    const res = await request(app)
+        .put(`/tasks/${taskId}`)
+        .send({ completed: true });
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.message).toBe("Task updated");
+});
     });
 });
