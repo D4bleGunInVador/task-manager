@@ -8,14 +8,14 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
-let onlineUsers = new Map(); // ✅ Виправлено: використовуємо Map (ключ - socket.id, значення - email)
+let onlineUsers = new Map(); 
 
 io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
     socket.on("register-user", (userEmail) => {
         if (userEmail) {
-            onlineUsers.set(socket.id, userEmail); // ✅ Тепер працює коректно
+            onlineUsers.set(socket.id, userEmail); 
             io.emit("online-users", Array.from(onlineUsers.values())); // Відправляємо список email'ів
         }
     });
@@ -41,6 +41,10 @@ app.use(cors());
 // Підключаємо маршрути
 const authRoutes = require("./routes/auth");
 const taskRoutes = require("./routes/tasks");
+const authenticateToken = require("./middleware/authMiddleware"); // Імпортуємо Middleware
+
+app.use("/auth", authRoutes);
+app.use("/tasks", authenticateToken, taskRoutes); 
 
 app.use("/auth", authRoutes);
 app.use("/tasks", taskRoutes);
