@@ -1,11 +1,12 @@
 const sqlite3 = require("sqlite3").verbose();
+const DB_FILE = process.env.NODE_ENV === "test" ? "./test.sqlite" : "./database.sqlite";
 
 // Підключення до бази даних
-const db = new sqlite3.Database("./database.sqlite", (err) => {
+const db = new sqlite3.Database(DB_FILE, (err) => {
     if (err) {
         console.error("❌ Database connection error:", err.message);
     } else {
-        console.log("✅ Connected to SQLite database");
+        console.log(`✅ Connected to SQLite database: ${DB_FILE}`);
     }
 });
 
