@@ -46,12 +46,17 @@ jobs:
           echo "Server did not start in time." && exit 1
 
       - name: Install Newman
-        run: npm install -g newman
+        run: npm install -g newman jq
 
       - name: Get Auth Token
         run: |
           TOKEN=$(curl -X POST "http://localhost:5000/auth/login" -H "Content-Type: application/json" -d '{"email": "taskuser@example.com", "password": "testpassword"}' | jq -r '.token')
+          if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
+            echo "Failed to get token!"
+            exit 1
+          fi
           echo "TOKEN=$TOKEN" >> $GITHUB_ENV
+          echo "Token successfully received."
 
       - name: Update Postman Environment
         run: |
