@@ -72,6 +72,7 @@ jobs:
           jq --arg token "$TOKEN" '.values |= map(if .key == "TOKEN" then .value = $token else . end)' postman_environment.json > postman_environment_tmp.json
           mv postman_environment_tmp.json postman_environment.json
 
+
       - name: Install Newman
         run: npm install -g newman
 
