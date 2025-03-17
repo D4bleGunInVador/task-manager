@@ -16,8 +16,7 @@ db.serialize(() => {
         `CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            last_active DATETIME DEFAULT NULL
+            password TEXT NOT NULL
         )`,
         (err) => {
             if (err) console.error("❌ Error creating users table:", err.message);
@@ -26,13 +25,13 @@ db.serialize(() => {
     );
 
     db.run(
-        `CREATE TABLE IF NOT EXISTS tasks (
+            `CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
+            due_date TEXT DEFAULT NULL,
             completed BOOLEAN DEFAULT 0,
-            due_date TEXT, -- Дата завершення задачі
-            image_path TEXT, -- Шлях до прикріпленого фото
-            user_id INTEGER,
+            user_id INTEGER NOT NULL,
+            image_path TEXT DEFAULT NULL,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )`,
         (err) => {
