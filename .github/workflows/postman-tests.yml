@@ -45,7 +45,13 @@ jobs:
           done
           echo "Server did not start in time." && exit 1
 
+      - name: Register test user
+        run: |
+          curl -s -X POST "http://localhost:5000/auth/register" \
+            -H "Content-Type: application/json" \
+            -d '{"email": "test@exmp.com", "password": "1"}' || true
       - name: Get Auth Token (Without jq)
+      
         run: |
           RESPONSE=$(curl -s -X POST "http://localhost:5000/auth/login" \
             -H "Content-Type: application/json" \
