@@ -76,6 +76,7 @@ jobs:
       - name: Install Newman
         run: npm install -g newman
 
-      - name: Run API tests
+      - name: Run API tests (Test mode)
         run: |
-          newman run postman-tests.json -e postman_environment.json
+          NODE_ENV=test newman run postman-tests.json -e postman_environment.json
+
