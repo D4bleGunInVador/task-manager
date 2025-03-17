@@ -77,5 +77,4 @@ jobs:
 
       - name: Run API tests
         run: |
-          newman run postman-tests.json -e postman_environment.json \
-            --env-var "TOKEN=$TOKEN"
+          newman run postman-tests.json -e postman_environment.json
