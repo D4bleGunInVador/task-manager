@@ -23,6 +23,28 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm install
+
+      - name: Start server in background
+        run: |
+          cd backend
+          nohup npm run dev > server.log 2>&1 &
+
+      - name: Wait for server to be ready
+        run: |
+          for i in {1..10}; do
+            if curl --output /dev/null --silent --head --fail http://localhost:5000/health; then
+              echo "Server is up!"
+              exit 0
+            fi
+            echo "Waiting for server..."
+            sleep 5
+          done
+          echo "Server did not start in time." && exit 1
+
       - name: Install Newman
         run: npm install -g newman
 
